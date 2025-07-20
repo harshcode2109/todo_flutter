@@ -11,89 +11,171 @@ class AuthForm extends StatefulWidget {
 }
 
 class _AuthFormState extends State<AuthForm> {
-  final _formKey=GlobalKey<FormState>();
-  var _email='';
-  var _password='';
-  var _username='';
-  bool _isLogin=true;
+  final _formKey = GlobalKey<FormState>();
+  var _email = '';
+  var _password = '';
+  var _username = '';
+  bool _isLogin = true;
 
-  startauthentication() async{
-    final isvalid=_formKey.currentState!.validate();
+  startauthentication() async {
+    final isvalid = _formKey.currentState!.validate();
     FocusScope.of(context).unfocus();
 
-    if(isvalid){
+    if (isvalid) {
       _formKey.currentState!.save();
-      submitform(_email,_password,_username);
+      submitform(_email, _password, _username);
     }
   }
-  submitform(String email, String password, String username) async{
-    final auth=FirebaseAuth.instance;
+
+  submitform(String email, String password, String username) async {
+    final auth = FirebaseAuth.instance;
     UserCredential authResult;
 
-    try{
-      if(_isLogin){
-        authResult=await auth.signInWithEmailAndPassword(email: email, password: password );
-
-      }
-      else{
-        authResult= await auth.createUserWithEmailAndPassword(email: email, password: password  );
-        String uid= authResult.user!.uid;
+    try {
+      if (_isLogin) {
+        authResult = await auth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+      } else {
+        authResult = await auth.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        String uid = authResult.user!.uid;
         await FirebaseFirestore.instance.collection('users').doc(uid).set({
           'username': username,
           'email': email,
         });
       }
-
-    }
-    catch(error){
+    } catch (error) {
       print(error);
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height,
       width: MediaQuery.of(context).size.width,
       child: ListView(
-        children: <Widget> [
-           Padding(padding: EdgeInsets.all(10.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextFormField(
-                validator: (value){
-                  if(value!.isEmpty|| !value.contains('@')){
-                    return 'Please enter a valid email address';
-                  }
-                  return null;
-                },
-                onSaved: (value){
-                  _email=value!;
-                },
-                keyboardType: TextInputType.emailAddress,
-                key: ValueKey('email'),
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  hintText: 'Enter your email',
-                  labelStyle: GoogleFonts.roboto(),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  )
-                ),
-              )
-            ],
+        children: <Widget>[
+          Padding(
+            padding: EdgeInsets.all(10.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextFormField(
+                    validator: (value) {
+                      if (value!.isEmpty || !value.contains('@')) {
+                        return 'Please enter a valid email address';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      _email = value!;
+                    },
+                    keyboardType: TextInputType.emailAddress,
+                    key: ValueKey('email'),
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      hintText: 'Enter your email',
+                      labelStyle: GoogleFonts.roboto(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                  ),
+                  if (!_isLogin)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: TextFormField(
+                        onSaved: (value) {
+                          _username = value!;
+                        },
+                        key: ValueKey('username'),
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          hintText: 'Enter your username',
+                          labelStyle: GoogleFonts.roboto(),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                        ),
+                      ),
+                    ),
+                  SizedBox(height: 10.0),
+                  TextFormField(
+                    obscureText: true,
+                    validator: (value) {
+                      if (value!.isEmpty || value.length < 7) {
+                        return 'Please enter a valid password';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      _password = value!;
+                    },
+                    key: ValueKey('password'),
+                    decoration: InputDecoration(
+                      labelText: 'password',
+                      hintText: 'Enter your password',
+                      labelStyle: GoogleFonts.roboto(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: double.infinity, // 👈 makes button full width
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
 
-
-    ),)
-           ),
-
-
-            ],
+                      onPressed: () {
+                        startauthentication();
+                      },
+                      child: Text(
+                        _isLogin ? 'Login' : 'Sign Up',
+                        style: GoogleFonts.roboto(
+                          color: Colors.white,
+                          fontSize: 18.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10.0),
+                  Container(
+                    child: TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _isLogin = !_isLogin;
+                        });
+                      },
+                      child: Text(
+                        _isLogin
+                            ? 'Create new account'
+                            : 'I already have an account',
+                        style: GoogleFonts.roboto(
+                          color: Colors.blue,
+                          fontSize: 18.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-
-
+        ],
+      ),
     );
   }
 }

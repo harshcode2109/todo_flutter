@@ -60,4 +60,6 @@ flutter {
 
 
 // ✅ Add this at the very end of this file
- apply(plugin = "com.google.gms.google-services")
+apply(plugin = "com.google.gms.google-services")
+apply(plugin = "com.google.firebase.crashlytics")
+
